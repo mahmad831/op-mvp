@@ -1,0 +1,31 @@
+workflows:
+  android-debug:
+    name: Android Debug APK
+    environment:
+      flutter: stable
+      java: 17
+    scripts:
+      - name: Prepare project
+        script: |
+          echo "Working dir: $(pwd)"
+          if [ ! -d "android" ]; then
+            flutter create . --platforms=android
+          fi
+          # Bump Gradle heap & AndroidX flags
+          echo "org.gradle.jvmargs=-Xmx3g -Dkotlin.daemon.jvm.options=-Xmx1g" >> android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+          # Add permissions
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            if ! grep -q 'android.permission.CAMERA' "$MANIFEST"; then
+              sed -i.bak 's#<application#<uses-permission android:name="android.permission.CAMERA"/>\n<uses-permission android:name="android.permission.RECORD_AUDIO"/>\n<uses-permission android:name="android.permission.WAKE_LOCK"/>\n\n<application#' "$MANIFEST"
+            fi
+          fi
+          flutter clean
+          flutter pub get
+      - name: Build debug APK (arm64 only, verbose)
+        script: |
+          flutter build apk --debug --target-platform=android-arm64 -v
+    artifacts:
+      - build/app/outputs/flutter-apk/app-debug.apk
