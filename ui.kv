@@ -1,0 +1,409 @@
+
+#:kivy 2.3.0
+#:import dp kivy.metrics.dp
+
+< PillButton@ButtonBehavior+BoxLayout >:
+    text: ""
+    radius: dp(18)
+    padding: dp(18), dp(16)
+    spacing: dp(12)
+    size_hint_y: None
+    height: dp(64)
+    canvas.before:
+        Color:
+            rgba: 0.20, 0.78, 0.36, 1  # green pill
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.radius,]
+    Label:
+        text: root.text
+        color: 1, 1, 1, 1
+        bold: True
+        font_size: '18sp'
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+    Widget:
+        size_hint_x: None
+        width: dp(24)  # keeps right spacing even without icon
+
+< HomeScreen >:
+    name: "home"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.9, None
+        height: self.minimum_height
+        spacing: dp(16)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        # Top spacing (no logo since assets are empty)
+        Widget:
+            size_hint_y: None
+            height: dp(20)
+
+        Label:
+            text: "Opticia"
+            color: 1, 1, 1, 1
+            bold: True
+            font_size: '32sp'
+            size_hint_y: None
+            height: dp(48)
+
+        Widget:
+            size_hint_y: None
+            height: dp(10)
+
+        PillButton:
+            text: "Camera"
+            on_release: app.change_screen("camera_demo")
+
+        PillButton:
+            text: "Accessibility"
+            on_release: app.change_screen("settings")
+
+        PillButton:
+            text: "Microphone"
+            on_release: app.change_screen("mic_demo")
+
+        PillButton:
+            text: "Next"
+            on_release: app.change_screen("demo_hub")
+
+        Widget:
+            size_hint_y: None
+            height: dp(8)
+
+< PlaceholderScreen >:
+    canvas.before:
+        Color:
+            rgba: 0.10, 0.10, 0.10, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Label:
+        text: root.label_text
+        color: 1,1,1,1
+        font_size: '24sp'
+        bold: True
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+< DemoHubScreen >:
+    name: "demo_hub"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.9, None
+        height: self.minimum_height
+        spacing: dp(12)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        Label:
+            text: "Eye Control Demos"
+            color: 1,1,1,1
+            bold: True
+            font_size: '28sp'
+            size_hint_y: None
+            height: dp(40)
+
+        PillButton:
+            text: "Buttons Demo"
+            on_release: app.change_screen("buttons_demo")
+        PillButton:
+            text: "Gaze Typing"
+            on_release: app.change_screen("keyboard_demo")
+        PillButton:
+            text: "Drawing Pad"
+            on_release: app.change_screen("draw_demo")
+        PillButton:
+            text: "Media Controls"
+            on_release: app.change_screen("media_demo")
+        PillButton:
+            text: "Mini Game"
+            on_release: app.change_screen("game_demo")
+
+< SettingsScreen >:
+    name: "settings"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.92, None
+        height: self.minimum_height
+        spacing: dp(12)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        Label:
+            text: "Accessibility Settings"
+            color: 1,1,1,1
+            bold: True
+            font_size: '28sp'
+            size_hint_y: None
+            height: dp(42)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            Label:
+                text: "Sensitivity"
+                color: 1,1,1,1
+            Slider:
+                min: 0.3
+                max: 2.0
+                value: 1.0
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            Label:
+                text: "Dwell Time (s)"
+                color: 1,1,1,1
+            Slider:
+                min: 0.5
+                max: 3.0
+                value: 1.5
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            Label:
+                text: "Sound Feedback"
+                color: 1,1,1,1
+            ToggleButton:
+                text: "OFF"
+                on_state: self.text.__setitem__(slice(None), "ON" if self.state=="down" else "OFF")
+
+        PillButton:
+            text: "Back to Home"
+            on_release: app.change_screen("home")
+
+< HelpScreen >:
+    name: "help"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.92, None
+        height: self.minimum_height
+        spacing: dp(10)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        Label:
+            text: "Help / Manual"
+            color: 1,1,1,1
+            bold: True
+            font_size: '28sp'
+            size_hint_y: None
+            height: dp(40)
+
+        Label:
+            text: "• Use good lighting.\n• Keep phone ~30–40 cm from face.\n• Move eyes more than head.\n• Hold gaze steady to click."
+            color: 0.9,0.9,0.9,1
+            halign: 'left'
+            valign: 'top'
+            text_size: self.size
+
+        PillButton:
+            text: "Back to Home"
+            on_release: app.change_screen("home")
+
+# ---------- DEMO SCREENS ----------
+
+< ButtonsDemoScreen >:
+    name: "buttons_demo"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.9, None
+        height: self.minimum_height
+        spacing: dp(12)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        Label:
+            text: "Eye-Controlled Buttons"
+            color: 1,1,1,1
+            bold: True
+            font_size: '26sp'
+            size_hint_y: None
+            height: dp(40)
+        ButtonsDemo:
+            id: bdemo
+            size_hint_y: None
+            height: dp(220)
+        Label:
+            text: bdemo.status_text
+            color: 1,1,1,1
+            size_hint_y: None
+            height: dp(30)
+        PillButton:
+            text: "Back"
+            on_release: app.change_screen("demo_hub")
+
+<KeyboardDemoScreen>:
+    name: "keyboard_demo"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.94, None
+        height: self.minimum_height
+        spacing: dp(8)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        Label:
+            text: "Gaze Typing"
+            color: 1,1,1,1
+            bold: True
+            font_size: '26sp'
+            size_hint_y: None
+            height: dp(40)
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            Label:
+                id: typed
+                text: root.children[1].children[0].typed_text if root.children and len(root.children)>=2 else ""
+                color: 1,1,1,1
+        KeyboardDemo:
+            id: kdemo
+            size_hint_y: None
+            height: dp(240)
+        BoxLayout:
+            size_hint_y: None
+            height: dp(50)
+            PillButton:
+                text: "Clear"
+                on_release: kdemo.clear_text()
+            PillButton:
+                text: "Back"
+                on_release: app.change_screen("demo_hub")
+
+<DrawDemoScreen>:
+    name: "draw_demo"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.94, 0.9
+        spacing: dp(8)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        Label:
+            text: "Drawing Pad"
+            color: 1,1,1,1
+            bold: True
+            font_size: '26sp'
+            size_hint_y: None
+            height: dp(40)
+        DrawDemo:
+            id: ddemo
+            size_hint: 1, 1
+            canvas.before:
+                Color:
+                    rgba: 0.15,0.15,0.15,1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+        BoxLayout:
+            size_hint_y: None
+            height: dp(50)
+            PillButton:
+                text: "Back"
+                on_release: app.change_screen("demo_hub")
+
+<MediaDemoScreen>:
+    name: "media_demo"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.9, None
+        height: self.minimum_height
+        spacing: dp(10)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        Label:
+            text: "Media Controls"
+            color: 1,1,1,1
+            bold: True
+            font_size: '26sp'
+            size_hint_y: None
+            height: dp(40)
+        MediaDemo:
+            id: mdemo
+            size_hint_y: None
+            height: dp(160)
+        Label:
+            text: mdemo.status_text
+            color: 1,1,1,1
+            size_hint_y: None
+            height: dp(28)
+        PillButton:
+            text: "Back"
+            on_release: app.change_screen("demo_hub")
+
+<GameDemoScreen>:
+    name: "game_demo"
+    canvas.before:
+        Color:
+            rgba: 0.08, 0.08, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.94, 0.92
+        spacing: dp(8)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        Label:
+            text: "Mini Game"
+            color: 1,1,1,1
+            bold: True
+            font_size: '26sp'
+            size_hint_y: None
+            height: dp(40)
+        PongGame:
+            id: pg
+            size_hint: 1, 1
+            canvas.before:
+                Color:
+                    rgba: 0.15,0.15,0.15,1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+        PillButton:
+            text: "Back"
+            on_release: app.change_screen("demo_hub")
