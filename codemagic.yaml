@@ -8,37 +8,42 @@ workflows:
       - name: Prepare Flutter Android project
         script: |
           echo "Working dir: $(pwd)"
-          # Create Android project if missing
+          # 1) Create Android project if missing
           if [ ! -d "android" ]; then
             flutter create . --platforms=android
           fi
 
-          # Ensure AndroidX/Jetifier and Gradle/Kotlin memory
-          echo "org.gradle.jvmargs=-Xmx3g -Dkotlin.daemon.jvm.options=-Xmx1g" >> android/gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
+          # 2) AndroidX + Gradle/Kotlin memory
+          {
+            echo "org.gradle.jvmargs=-Xmx3g -Dkotlin.daemon.jvm.options=-Xmx1g"
+            echo "android.useAndroidX=true"
+            echo "android.enableJetifier=true"
+          } >> android/gradle.properties
 
-          # Force safe SDK versions for ML Kit & plugins
+          # 3) Force safe SDK versions for ML Kit & plugins
           APP_GRADLE="android/app/build.gradle"
           if [ -f "$APP_GRADLE" ]; then
-            # compileSdkVersion 34
             sed -i.bak 's/compileSdkVersion [0-9][0-9]*/compileSdkVersion 34/g' "$APP_GRADLE" || true
-            # targetSdkVersion 34 & minSdkVersion 21
             sed -i.bak 's/minSdkVersion [0-9][0-9]*/minSdkVersion 21/g' "$APP_GRADLE" || true
             sed -i.bak 's/targetSdkVersion [0-9][0-9]*/targetSdkVersion 34/g' "$APP_GRADLE" || true
           fi
 
-          # Add required permissions if not present
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST" ]; then
-            if ! grep -q 'android.permission.CAMERA' "$MANIFEST"; then
-              sed -i.bak 's#<application#<uses-permission android:name="android.permission.CAMERA"/>\
-<uses-permission android:name="android.permission.RECORD_AUDIO"/>\
-<uses-permission android:name="android.permission.WAKE_LOCK"/>\
-\
-<application#' "$MANIFEST"
-            fi
-          fi
+          # 4) Add required permissions to AndroidManifest.xml (safe Python edit)
+          python3 - <<'PY'
+import io, os, sys
+p = "android/app/src/main/AndroidManifest.xml"
+if os.path.exists(p):
+    txt = io.open(p, "r", encoding="utf-8").read()
+    if "android.permission.CAMERA" not in txt:
+        txt = txt.replace(
+            "<application",
+            '<uses-permission android:name="android.permission.CAMERA"/>\n'
+            '<uses-permission android:name="android.permission.RECORD_AUDIO"/>\n'
+            '<uses-permission android:name="android.permission.WAKE_LOCK"/>\n\n'
+            "<application"
+        )
+        io.open(p, "w", encoding="utf-8").write(txt)
+PY
 
           flutter clean
           flutter pub get
