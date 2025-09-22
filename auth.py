@@ -1,81 +1,55 @@
-
-import cv2
-import os
-import numpy as np
+# auth.py
+import cv2, os, numpy as np
+from kivy.resources import resource_find
 
 DATA_DIR = "face_data"
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR)
-
+os.makedirs(DATA_DIR, exist_ok=True)
 FACE_FILE = os.path.join(DATA_DIR, "user_face.npy")
 
+def _cascade(name):
+    # Try packaged assets first, then OpenCV's built-in path
+    p = resource_find(f"assets/haarcascades/{name}")
+    if p:
+        return cv2.CascadeClassifier(p)
+    return cv2.CascadeClassifier(cv2.data.haarcascades + name)
 
 class FaceAuth:
     def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier(
-            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-        )
+        self.face_cascade = _cascade("haarcascade_frontalface_default.xml")
 
-    def register_face(self):
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            print("Camera not available")
+    def register_face(self, cam_index=1):
+        cap = cv2.VideoCapture(cam_index) or cv2.VideoCapture(0)
+        if not cap or not cap.isOpened():
             return False
-
-        print("Look at the camera for registration...")
-
-        face_embedding = None
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+            ok, frame = cap.read()
+            if not ok: break
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-
-            for (x, y, w, h) in faces:
-                roi = gray[y:y+h, x:x+w]
-                roi_resized = cv2.resize(roi, (100, 100))
-                face_embedding = roi_resized.flatten()
-                np.save(FACE_FILE, face_embedding)
-                print("Face registered ✅")
+            faces = self.face_cascade.detectMultiScale(gray, 1.2, 5, minSize=(120,120))
+            if len(faces):
+                x,y,w,h = max(faces, key=lambda f:f[2]*f[3])
+                roi = cv2.resize(gray[y:y+h, x:x+w], (100,100)).flatten()
+                np.save(FACE_FILE, roi)
                 cap.release()
                 return True
+        cap.release(); return False
 
-        cap.release()
-        return False
-
-    def authenticate(self):
+    def authenticate(self, cam_index=1, thresh=0.80):
         if not os.path.exists(FACE_FILE):
-            print("No face registered yet!")
             return False
-
-        stored_face = np.load(FACE_FILE)
-
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            print("Camera not available")
+        stored = np.load(FACE_FILE)
+        cap = cv2.VideoCapture(cam_index) or cv2.VideoCapture(0)
+        if not cap or not cap.isOpened():
             return False
-
-        print("Authenticating...")
-
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+            ok, frame = cap.read()
+            if not ok: break
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-
-            for (x, y, w, h) in faces:
-                roi = gray[y:y+h, x:x+w]
-                roi_resized = cv2.resize(roi, (100, 100))
-                live_face = roi_resized.flatten()
-
-                # Simple cosine similarity check
-                sim = np.dot(stored_face, live_face) / (
-                    np.linalg.norm(stored_face) * np.linalg.norm(live_face)
-                )
+            faces = self.face_cascade.detectMultiScale(gray, 1.2, 5, minSize=(120,120))
+            if len(faces):
+                x,y,w,h = max(faces, key=lambda f:f[2]*f[3])
+                live = cv2.resize(gray[y:y+h, x:x+w], (100,100)).flatten()
+                sim = float(np.dot(stored, live) / (np.linalg.norm(stored)*np.linalg.norm(live) + 1e-8))
                 cap.release()
-                return sim > 0.8
-
-        cap.release()
-        return False
+                return sim >= thresh
+        cap.release(); return False
